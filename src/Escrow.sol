@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {Operation, OperationStatus, TokenSet} from "./EscrowTypes.sol";
 import {OperationLib} from "./libraries/OperationLib.sol";
@@ -21,6 +22,7 @@ import {TokenLib} from "./libraries/TokenLib.sol";
 contract Escrow is Ownable, ReentrancyGuard {
     using OperationLib for Operation;
     using TokenLib for TokenSet;
+    using SafeERC20 for IERC20;
 
     // ---------------------------------------------------------------------------------------
     // Storage
@@ -127,9 +129,11 @@ contract Escrow is Ownable, ReentrancyGuard {
         emit OperationCreated(id, msg.sender, tokenA, tokenB, amountA, amountB, memoCID);
 
         // 🇪🇸 NOTA: EFFECTS antes que INTERACTIONS — el estado queda consistente ANTES de la
-        //          llamada externa, de modo que una reentrada vería la operación ya registrada.
+        //          llamada externa (una reentrada vería la operación ya registrada). Las
+        //          interactions usan SafeERC20: revierten si el ERC20 devuelve false o no
+        //          retorna bool (ej. USDT), en vez de dar por buena una transferencia fallida.
         // interactions
-        IERC20(tokenA).transferFrom(msg.sender, address(this), amountA);
+        IERC20(tokenA).safeTransferFrom(msg.sender, address(this), amountA);
     }
 
     /// @notice Complete an active operation: the caller pays `amountB` of `tokenB` to the
@@ -146,11 +150,11 @@ contract Escrow is Ownable, ReentrancyGuard {
         op.markCompleted(msg.sender);
         emit OperationCompleted(id, msg.sender);
 
-        // 🇪🇸 NOTA: se marca Completed ANTES de transferir — así el swap es atómico y una
-        //          reentrada encontraría la operación ya cerrada (no reejecutable).
+        // 🇪🇸 NOTA: se marca Completed ANTES de transferir — swap atómico y no reejecutable.
+        //          Ambas piernas usan SafeERC20 para no fiarse de ERC20 no conformes.
         // interactions
-        IERC20(op.tokenB).transferFrom(msg.sender, op.creator, op.amountB);
-        IERC20(op.tokenA).transfer(msg.sender, op.amountA);
+        IERC20(op.tokenB).safeTransferFrom(msg.sender, op.creator, op.amountB);
+        IERC20(op.tokenA).safeTransfer(msg.sender, op.amountA);
     }
 
     /// @notice Cancel an active operation and refund the escrowed `tokenA` to its creator.
@@ -166,10 +170,10 @@ contract Escrow is Ownable, ReentrancyGuard {
         op.markCancelled();
         emit OperationCancelled(id);
 
-        // 🇪🇸 NOTA: Cancelled ANTES del refund — el estado final se fija primero y la
-        //          transferencia va después (CEI), evitando doble-cancelación por reentrada.
+        // 🇪🇸 NOTA: Cancelled ANTES del refund — estado final primero, transferencia después
+        //          (CEI). El refund usa SafeERC20 para revertir ante ERC20 no conformes.
         // interactions
-        IERC20(op.tokenA).transfer(op.creator, op.amountA);
+        IERC20(op.tokenA).safeTransfer(op.creator, op.amountA);
     }
 
     // ---------------------------------------------------------------------------------------
