@@ -10,6 +10,7 @@
 - Comentarios pedagógicos en ESPAÑOL con prefijo `🇪🇸 NOTA:` en los puntos clave
 - Patrón de librerías con `using for`: las libs hacen EFFECTS (mutación de estado); el contrato principal hace CHECKS + INTERACTIONS. Orden estricto checks-effects-interactions.
 - ReentrancyGuard en toda función que haga transferencias externas
+- Ejecutar `forge fmt` (desde la raíz Foundry) antes de CADA commit que toque ficheros `.sol`, para que el paso `forge fmt --check` del CI no falle. Esto es SOLO para Solidity; el frontend en `web/` se formatea con Prettier/ESLint, nunca con `forge fmt`.
 
 ## Testing (prompts posteriores)
 - 100% coverage (líneas, statements, branches, funcs) con ASERCIONES REALES, no ejecución hueca
