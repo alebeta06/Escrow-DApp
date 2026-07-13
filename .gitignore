@@ -19,3 +19,7 @@ node_modules/
 # Claude Code tooling (local)
 .claude/
 .claude-flow/
+
+# Local deploy artifacts (generados por deploy.sh)
+deployment-info.txt
+web/lib/contracts.ts
