@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+/* 🇪🇸 NOTA: tema mínimo CSS-first de Tailwind v4 (sin diseñar UI todavía).
+   Tokens de color en oklch; el diseño real llega en prompts posteriores. */
+:root {
+  --background: oklch(1 0 0); /* blanco */
+  --foreground: oklch(0.145 0 0); /* casi negro */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: system-ui, -apple-system, sans-serif;
+}

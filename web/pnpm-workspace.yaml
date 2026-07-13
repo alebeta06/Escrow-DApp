@@ -1,0 +1,9 @@
+# 🇪🇸 NOTA: web/ es su propia raíz pnpm (aislada del proyecto Foundry en la raíz del repo).
+# `allowBuilds` decide qué dependencias pueden correr build scripts nativos en la instalación.
+# sharp (optimización de imágenes) y unrs-resolver (resolver de eslint) NO hacen falta para
+# `next build` ni para este andamiaje → false. Sin esta decisión explícita, pnpm 11 aborta la
+# instalación con exit 1 ("ERR_PNPM_IGNORED_BUILDS"), y `next build` la invoca internamente.
+# Si más adelante se usa next/image en producción, poner sharp: true.
+allowBuilds:
+  sharp: false
+  unrs-resolver: false
