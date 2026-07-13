@@ -1,12 +1,52 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {Script} from "forge-std/Script.sol";
+import {Script, console2} from "forge-std/Script.sol";
+import {Escrow} from "../src/Escrow.sol";
+import {TestToken} from "../src/mocks/TestToken.sol";
 
 /// @title Deploy
-/// @notice Deployment script placeholder — la implementación real (Escrow + TKA/TKB) se hace
-///         en un prompt posterior.
-/// 🇪🇸 NOTA: se deja vacío a propósito para que el proyecto compile sin lógica de deploy aún.
+/// @notice Local (Anvil) deployment of the Escrow stack: two TestTokens (TKA/TKB), the Escrow
+///         contract, both tokens allowlisted, and 1000 units of each minted to the three
+///         standard Anvil accounts so the frontend has seeded balances to play with.
+/// @dev Local only — no Sepolia, no verification (that is Fase 2). Run via `deploy.sh`.
+/// 🇪🇸 NOTA (owner): el broadcast firma con la private key pasada por `--private-key` (en local,
+///          Anvil Account #0). Esa cuenta es msg.sender de cada `new`/llamada, así que el OWNER
+///          del Escrow (`Ownable(msg.sender)`) será Account #0.
 contract Deploy is Script {
-    function run() external {}
+    /// @dev 1000 tokens con 18 decimales, sembrados a cada cuenta.
+    uint256 internal constant SEED_AMOUNT = 1_000e18;
+
+    function run() external {
+        // Cuentas estándar de Anvil #0, #1, #2 que reciben el seed.
+        address[3] memory accounts = [
+            0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
+            0x70997970C51812dc3A010C7d01b50e0d17dc79C8,
+            0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC
+        ];
+
+        vm.startBroadcast();
+
+        // 1-3: despliegue de tokens y escrow.
+        TestToken tka = new TestToken("Token A", "TKA");
+        TestToken tkb = new TestToken("Token B", "TKB");
+        Escrow escrow = new Escrow();
+
+        // 4-5: allowlist de ambos tokens.
+        escrow.addToken(address(tka));
+        escrow.addToken(address(tkb));
+
+        // 6: seed de balances a las 3 cuentas.
+        for (uint256 i = 0; i < accounts.length; i++) {
+            tka.mint(accounts[i], SEED_AMOUNT);
+            tkb.mint(accounts[i], SEED_AMOUNT);
+        }
+
+        vm.stopBroadcast();
+
+        // 7: salida legible (deploy.sh usa run-latest.json, esto es para inspección humana).
+        console2.log("ESCROW", address(escrow));
+        console2.log("TKA", address(tka));
+        console2.log("TKB", address(tkb));
+    }
 }
