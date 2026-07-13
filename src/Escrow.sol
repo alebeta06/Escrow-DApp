@@ -109,13 +109,11 @@ contract Escrow is Ownable, ReentrancyGuard {
     /// @param amountB The amount of `tokenB` requested (> 0).
     /// @param memoCID Optional IPFS CID with extra info ("" allowed).
     /// @return id The id of the newly created operation.
-    function createOperation(
-        address tokenA,
-        address tokenB,
-        uint256 amountA,
-        uint256 amountB,
-        string calldata memoCID
-    ) external nonReentrant returns (uint256 id) {
+    function createOperation(address tokenA, address tokenB, uint256 amountA, uint256 amountB, string calldata memoCID)
+        external
+        nonReentrant
+        returns (uint256 id)
+    {
         // checks
         if (!_allowedTokens.has(tokenA)) revert TokenNotAllowed(tokenA);
         if (!_allowedTokens.has(tokenB)) revert TokenNotAllowed(tokenB);
