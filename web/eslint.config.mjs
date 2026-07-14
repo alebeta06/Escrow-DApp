@@ -18,6 +18,9 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      // 🇪🇸 Los tests E2E (Playwright) tienen sus propias convenciones (fixtures, addInitScript en
+      //    contexto navegador) y NO forman parte del lint de la app Next.
+      "e2e/**",
     ],
   },
 ];
