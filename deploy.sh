@@ -2,7 +2,8 @@
 #
 # deploy.sh — Despliegue LOCAL del Escrow en Anvil.
 #
-# Asume que Anvil YA está corriendo en http://localhost:8545 (no lo arranca).
+# Asume que Anvil YA está corriendo en $RPC_URL (default http://localhost:8545; override por env
+# RPC_URL para apuntar a otro puerto, p.ej. el Anvil efímero de los tests E2E). No lo arranca.
 # Despliega TKA/TKB + Escrow, autoriza los tokens, siembra balances, y exporta las
 # direcciones a web/lib/contracts.ts + deployment-info.txt.
 #
@@ -10,7 +11,9 @@
 
 set -euo pipefail
 
-RPC_URL="http://localhost:8545"
+# 🇪🇸 RPC configurable por env: default 8545 (uso manual intacto); los tests E2E lo sobreescriben
+#    para apuntar a su Anvil efímero. El chainId sigue siendo 31337 en cualquier puerto de Anvil.
+RPC_URL="${RPC_URL:-http://localhost:8545}"
 # 🇪🇸 Anvil Account #0 — clave PÚBLICA y estándar de test de Anvil. NO es un secreto y solo
 #    sirve para deploy LOCAL. El flujo Sepolia usa el keystore cifrado 'alebeta-admin', nunca esto.
 PRIVATE_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
