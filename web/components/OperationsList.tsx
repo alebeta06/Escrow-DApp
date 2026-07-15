@@ -8,6 +8,7 @@ import { useAllowedTokens } from "@/hooks/useAllowedTokens";
 import { ERC20_ABI, ESCROW_ABI } from "@/lib/abis";
 import { ESCROW_ADDRESS } from "@/lib/contracts";
 import { friendlyError } from "@/lib/errors";
+import { ipfsGatewayUrl } from "@/lib/ipfs";
 import { useRefresh } from "@/lib/refresh";
 import { shortAddress, type Operation } from "@/types/operation";
 
@@ -27,6 +28,67 @@ const STATUS_STYLE: Record<Operation["status"], string> = {
   Completed: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
   Cancelled: "bg-red-500/15 text-red-600 dark:text-red-400",
 };
+
+interface MemoState {
+  status: "loading" | "loaded" | "error";
+  text: string | null;
+}
+
+// 🇪🇸 Resuelve el memo desde un gateway IPFS. Es una llamada de red AISLADA por fila: si falla o
+//    tarda, NUNCA tumba OperationsList — cae a mostrar el CID como enlace al gateway.
+function MemoView({ cid }: { cid: string }) {
+  const url = ipfsGatewayUrl(cid);
+  const [state, setState] = useState<MemoState>({ status: "loading", text: null });
+
+  useEffect(() => {
+    let cancelled = false;
+    setState({ status: "loading", text: null });
+    fetch(url)
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`gateway ${res.status}`);
+        const json = (await res.json()) as { memo?: unknown };
+        const text = typeof json.memo === "string" ? json.memo : null;
+        if (!cancelled) setState({ status: "loaded", text });
+      })
+      .catch(() => {
+        if (!cancelled) setState({ status: "error", text: null });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [url]);
+
+  return (
+    <div className="mt-2 border-t border-foreground/10 pt-2 text-xs">
+      <span className="opacity-60">Memo: </span>
+      {state.status === "loading" ? (
+        <span className="opacity-50">Loading memo…</span>
+      ) : state.status === "loaded" && state.text ? (
+        <>
+          <span>{state.text}</span>{" "}
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="whitespace-nowrap underline opacity-60"
+          >
+            View on IPFS
+          </a>
+        </>
+      ) : (
+        // 🇪🇸 fallo del gateway o memo sin texto: enlazamos el CID crudo, no rompemos la fila.
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-mono underline opacity-60"
+        >
+          {cid}
+        </a>
+      )}
+    </div>
+  );
+}
 
 export function OperationsList() {
   const { account, signer } = useEthereum();
@@ -141,6 +203,8 @@ export function OperationsList() {
                   <dt className="opacity-60">Requests</dt>
                   <dd className="text-right">{formatAmount(op.tokenB, op.amountB)}</dd>
                 </dl>
+
+                {op.memoCID !== "" && <MemoView cid={op.memoCID} />}
 
                 {op.status === "Active" ? (
                   <div className="mt-3">

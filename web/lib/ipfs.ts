@@ -44,3 +44,13 @@ export async function uploadMemo(memo: string, creator: string | null): Promise<
   }
   return data.cid;
 }
+
+// 🇪🇸 Gateway de LECTURA (público, no secreto). Configurable por NEXT_PUBLIC_IPFS_GATEWAY; el default
+//    resuelve cualquier CID de Pinata. El base debe incluir la ruta hasta /ipfs/ (ver .env.example).
+const DEFAULT_GATEWAY = "https://gateway.pinata.cloud/ipfs/";
+
+/** Construye la URL de gateway para un CID a partir de `NEXT_PUBLIC_IPFS_GATEWAY` (o el default). */
+export function ipfsGatewayUrl(cid: string): string {
+  const base = process.env.NEXT_PUBLIC_IPFS_GATEWAY || DEFAULT_GATEWAY;
+  return `${base.replace(/\/+$/, "")}/${cid}`;
+}
