@@ -1,4 +1,5 @@
 import { id } from "ethers";
+import { IpfsUploadError } from "./ipfs";
 
 // 🇪🇸 NOTA: el ABI curado (abis.ts) NO incluye los fragments de error, así que ethers no puede
 //    decodificar los custom errors por nombre. Los mapeamos por SELECTOR (los primeros 4 bytes =
@@ -76,6 +77,9 @@ function trimMessage(message: string): string {
  * Order: wallet rejection → insufficient funds → custom error selector → ERC20 heuristics → fallback.
  */
 export function friendlyError(err: unknown): string {
+  // 🇪🇸 La subida a IPFS ya trae un mensaje legible; no la disfracemos de error de transacción.
+  if (err instanceof IpfsUploadError) return err.message;
+
   const code = getCode(err);
   const message = getStringField(err, "message");
 

@@ -7,15 +7,16 @@ import { useAllowedTokens, type AllowedToken } from "@/hooks/useAllowedTokens";
 import { ERC20_ABI, ESCROW_ABI } from "@/lib/abis";
 import { ESCROW_ADDRESS } from "@/lib/contracts";
 import { friendlyError } from "@/lib/errors";
+import { uploadMemo } from "@/lib/ipfs";
 import { useRefresh } from "@/lib/refresh";
 
-type Phase = "idle" | "approving" | "creating" | "success" | "error";
+type Phase = "idle" | "uploading" | "approving" | "creating" | "success" | "error";
 
 const INPUT =
   "rounded-md border border-foreground/20 bg-transparent px-3 py-2 text-sm outline-none focus:border-foreground/50";
 
 export function CreateOperation() {
-  const { signer } = useEthereum();
+  const { account, signer } = useEthereum();
   const { data: tokens } = useAllowedTokens();
   const { refresh } = useRefresh();
 
@@ -23,21 +24,23 @@ export function CreateOperation() {
   const [tokenB, setTokenB] = useState("");
   const [amountA, setAmountA] = useState("");
   const [amountB, setAmountB] = useState("");
-  // 🇪🇸 NOTA: el memo es funcional en la UI pero su valor se IGNORA — createOperation recibe
-  //    memoCID = "" SIEMPRE hasta que se integre la subida real a IPFS/Pinata (prompt posterior).
   const [memo, setMemo] = useState("");
 
   const [phase, setPhase] = useState<Phase>("idle");
   const [message, setMessage] = useState<string | null>(null);
+  // 🇪🇸 cuando la subida del memo falla, ofrecemos reintentar o crear SIN memo (el escrow no se cae
+  //    porque IPFS esté caído). Este flag activa esos dos botones.
+  const [memoUploadFailed, setMemoUploadFailed] = useState(false);
 
-  const busy = phase === "approving" || phase === "creating";
+  const busy = phase === "uploading" || phase === "approving" || phase === "creating";
   const list: AllowedToken[] = tokens ?? [];
 
   const findDecimals = (address: string): number =>
     list.find((t) => t.address === address)?.decimals ?? 18;
 
-  const handleCreate = async () => {
+  const runCreate = async (skipMemo = false) => {
     setMessage(null);
+    setMemoUploadFailed(false);
 
     // Validaciones client-side (feedback antes del revert on-chain).
     if (tokenA === "" || tokenB === "") {
@@ -72,17 +75,32 @@ export function CreateOperation() {
       return;
     }
 
+    // Paso 1 (solo si hay memo y no se pidió omitirlo): subir a IPFS → CID. Nada on-chain aún.
+    let memoCID = "";
+    const trimmedMemo = memo.trim();
+    if (trimmedMemo !== "" && !skipMemo) {
+      try {
+        setPhase("uploading");
+        memoCID = await uploadMemo(trimmedMemo, account);
+      } catch (err) {
+        setPhase("error");
+        setMemoUploadFailed(true);
+        setMessage(friendlyError(err));
+        return;
+      }
+    }
+
     try {
-      // Paso 1: approve del tokenA que el creador bloquea.
+      // Paso 2: approve del tokenA que el creador bloquea.
       setPhase("approving");
       const erc20 = new Contract(tokenA, ERC20_ABI, signer);
       const approveTx = await erc20.approve(ESCROW_ADDRESS, amountAWei);
       await approveTx.wait();
 
-      // Paso 2: crear la operación (memoCID = "" — ver NOTA arriba).
+      // Paso 3: crear la operación con el memoCID (o "" si no había memo / se omitió).
       setPhase("creating");
       const escrow = new Contract(ESCROW_ADDRESS, ESCROW_ABI, signer);
-      const createTx = await escrow.createOperation(tokenA, tokenB, amountAWei, amountBWei, "");
+      const createTx = await escrow.createOperation(tokenA, tokenB, amountAWei, amountBWei, memoCID);
       await createTx.wait();
 
       setPhase("success");
@@ -98,7 +116,13 @@ export function CreateOperation() {
   };
 
   const buttonLabel =
-    phase === "approving" ? "Approving…" : phase === "creating" ? "Creating…" : "Create operation";
+    phase === "uploading"
+      ? "Uploading memo…"
+      : phase === "approving"
+        ? "Approving…"
+        : phase === "creating"
+          ? "Creating…"
+          : "Create operation";
 
   return (
     <section className="rounded-lg border border-foreground/15 p-4">
@@ -110,18 +134,14 @@ export function CreateOperation() {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          void handleCreate();
+          void runCreate(false);
         }}
         className="mt-3 flex flex-col gap-3"
       >
         <div className="grid grid-cols-2 gap-2">
           <label className="flex flex-col gap-1 text-xs opacity-70">
             Token A (offer)
-            <select
-              value={tokenA}
-              onChange={(e) => setTokenA(e.target.value)}
-              className={INPUT}
-            >
+            <select value={tokenA} onChange={(e) => setTokenA(e.target.value)} className={INPUT}>
               <option value="">Select…</option>
               {list.map((t) => (
                 <option key={t.address} value={t.address}>
@@ -132,11 +152,7 @@ export function CreateOperation() {
           </label>
           <label className="flex flex-col gap-1 text-xs opacity-70">
             Token B (request)
-            <select
-              value={tokenB}
-              onChange={(e) => setTokenB(e.target.value)}
-              className={INPUT}
-            >
+            <select value={tokenB} onChange={(e) => setTokenB(e.target.value)} className={INPUT}>
               <option value="">Select…</option>
               {list.map((t) => (
                 <option key={t.address} value={t.address}>
@@ -170,12 +186,12 @@ export function CreateOperation() {
         </div>
 
         <label className="flex flex-col gap-1 text-xs opacity-70">
-          Memo / terms (optional, not stored yet)
+          Memo / terms (optional — stored on IPFS)
           <textarea
             value={memo}
             onChange={(e) => setMemo(e.target.value)}
             rows={2}
-            placeholder="Ignored until IPFS integration"
+            placeholder="e.g. settlement terms or a reference note"
             className={INPUT}
           />
         </label>
@@ -193,6 +209,27 @@ export function CreateOperation() {
         <p className={`mt-2 text-xs ${phase === "error" ? "text-red-500" : "opacity-70"}`}>
           {message}
         </p>
+      )}
+
+      {memoUploadFailed && (
+        <div className="mt-2 flex gap-2">
+          <button
+            type="button"
+            onClick={() => void runCreate(false)}
+            disabled={busy}
+            className="rounded-md border border-foreground/25 px-3 py-1.5 text-xs font-medium transition-opacity hover:opacity-70 disabled:opacity-40"
+          >
+            Retry
+          </button>
+          <button
+            type="button"
+            onClick={() => void runCreate(true)}
+            disabled={busy}
+            className="rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background transition-opacity hover:opacity-80 disabled:opacity-40"
+          >
+            Create without memo
+          </button>
+        </div>
       )}
     </section>
   );
