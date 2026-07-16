@@ -8,6 +8,7 @@ import { AddToken } from "@/components/AddToken";
 import { CreateOperation } from "@/components/CreateOperation";
 import { OperationsList } from "@/components/OperationsList";
 import { BalanceDebug } from "@/components/BalanceDebug";
+import { Timeline } from "@/components/Timeline";
 
 export default function Home() {
   const { isConnected } = useEthereum();
@@ -32,16 +33,20 @@ export default function Home() {
           // 🇪🇸 RefreshProvider SOLO alrededor del grid conectado: coordina el refetch entre
           //    columnas (crear/completar/cancelar refresca operaciones y balances).
           <RefreshProvider>
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-              {/* Col 1: acciones. AddToken se auto-oculta si no eres el owner. */}
-              <div className="flex flex-col gap-6">
-                <AddToken />
-                <CreateOperation />
+            <div className="flex flex-col gap-6">
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                {/* Col 1: acciones. AddToken se auto-oculta si no eres el owner. */}
+                <div className="flex flex-col gap-6">
+                  <AddToken />
+                  <CreateOperation />
+                </div>
+                {/* Col 2: operaciones con acciones por rol. */}
+                <OperationsList />
+                {/* Col 3: balances. */}
+                <BalanceDebug />
               </div>
-              {/* Col 2: operaciones con acciones por rol. */}
-              <OperationsList />
-              {/* Col 3: balances. */}
-              <BalanceDebug />
+              {/* Fila full-width: timeline de actividad alimentado por el indexer. */}
+              <Timeline />
             </div>
           </RefreshProvider>
         )}

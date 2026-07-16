@@ -25,9 +25,15 @@ async function isAllowed(env: E2EEnv, token: string): Promise<boolean> {
   return (await new Contract(env.escrow, ESCROW_ABI, ro(env)).isTokenAllowed(token)) as boolean;
 }
 
-// Localiza la tarjeta de una operación por su id ("#0", "#1", …) en OperationsList.
+// Localiza la tarjeta de una operación por su id ("#0", "#1", …) DENTRO de la sección Operations.
+// 🇪🇸 Se scopea a esa sección a propósito: el Timeline ("Activity") también renderiza <li> con "#id",
+//    así que un `page.locator("li")` global ya no sería único.
 const opCard = (page: import("@playwright/test").Page, id: number) =>
-  page.locator("li").filter({ hasText: `#${id}` });
+  page
+    .locator("section")
+    .filter({ has: page.getByRole("heading", { name: "Operations", exact: true }) })
+    .locator("li")
+    .filter({ hasText: `#${id}` });
 
 async function fillCreateForm(page: import("@playwright/test").Page): Promise<void> {
   await page.getByLabel("Token A (offer)").selectOption({ label: "TKA" });
@@ -45,7 +51,8 @@ test.describe.serial("Escrow dApp — E2E flows", () => {
     await expect(page.getByText("Welcome")).toBeVisible();
 
     await page.getByRole("button", { name: "Connect Wallet" }).click();
-    await expect(page.getByText(shortOf(ALICE_PK))).toBeVisible();
+    // 🇪🇸 scope al header: la address abreviada ahora aparece también en Operations/Balances/Timeline.
+    await expect(page.locator("header").getByText(shortOf(ALICE_PK))).toBeVisible();
   });
 
   test("role gate: AddToken visible for owner, hidden for non-owner", async ({ page, wallet }) => {
@@ -54,7 +61,7 @@ test.describe.serial("Escrow dApp — E2E flows", () => {
 
     wallet.setActor("bob");
     await page.reload();
-    await expect(page.getByText(shortOf(BOB_PK))).toBeVisible(); // reconectado como Bob
+    await expect(page.locator("header").getByText(shortOf(BOB_PK))).toBeVisible(); // reconectado como Bob
     await expect(page.getByRole("heading", { name: "Token Allowlist" })).toHaveCount(0);
   });
 

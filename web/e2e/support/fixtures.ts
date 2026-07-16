@@ -28,7 +28,8 @@ export { expect };
 export async function connectAs(page: Page, wallet: WalletMock, role: Role): Promise<void> {
   wallet.setActor(role);
   await page.goto("/");
-  await expect(page.getByText(shortOf(pkFor(role)))).toBeVisible();
+  // 🇪🇸 scope al header: la address abreviada aparece también en Operations/Balances/Timeline.
+  await expect(page.locator("header").getByText(shortOf(pkFor(role)))).toBeVisible();
 }
 
 export { addressOf, pkFor, shortOf };

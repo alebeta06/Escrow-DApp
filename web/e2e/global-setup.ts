@@ -79,10 +79,13 @@ export default async function globalSetup(): Promise<void> {
     const tkb = readAddress(contractsSrc, "TKB_ADDRESS");
 
     // 4) Servidor Next dev en :3100 (arrancado DESPUÉS del deploy → sirve contra el estado ya sembrado).
+    //    🇪🇸 LOGS_RPC_URL apunta al Anvil del test (:8546); si no, la route /api/timeline defaultea a
+    //    :8545 (el Anvil de desarrollo del usuario) y escanearía la cadena equivocada.
     const dev = spawn("pnpm", ["exec", "next", "dev", "-p", String(DEV_PORT)], {
       cwd: WEB_DIR,
       detached: true,
       stdio: "ignore",
+      env: { ...process.env, LOGS_RPC_URL: RPC_URL },
     });
     dev.unref();
     const devPid = dev.pid;
