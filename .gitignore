@@ -21,5 +21,6 @@ node_modules/
 .claude-flow/
 
 # Local deploy artifacts (generados por deploy.sh)
+# 🇪🇸 web/lib/contracts.ts ya NO se ignora: pasó a versionado (lee direcciones de env vars). Ahora
+#    deploy.sh escribe web/.env.development.local, que ya cae bajo el patrón .env.* de arriba.
 deployment-info.txt
-web/lib/contracts.ts

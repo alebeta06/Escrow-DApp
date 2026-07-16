@@ -89,33 +89,21 @@ TKA_ADDRESS="${LINES[1]}"
 TKB_ADDRESS="${LINES[2]}"
 DEPLOY_BLOCK="${LINES[3]}"
 
-# 5: generar web/lib/contracts.ts (idempotente: se regenera entero en cada deploy).
-echo "==> Generando web/lib/contracts.ts ..."
-mkdir -p web/lib
-cat > web/lib/contracts.ts <<EOF
-// AUTO-GENERADO por deploy.sh — NO editar a mano.
-// 🇪🇸 Se regenera ENTERO en cada deploy local (todavía sin ABIs). Cuando el frontend añada los
-//    ABIs, mantenlos en otro módulo aparte para que este re-deploy no los pise.
-export const CHAIN_ID = 31337;
-
-export const ESCROW_ADDRESS = "${ESCROW_ADDRESS}";
-export const TKA_ADDRESS = "${TKA_ADDRESS}";
-export const TKB_ADDRESS = "${TKB_ADDRESS}";
-
-// 🇪🇸 Bloque del deploy del Escrow: el indexer de eventos escanea DESDE aquí (nunca desde 0).
-export const DEPLOY_BLOCK = ${DEPLOY_BLOCK};
-
-export const CONTRACTS = {
-  chainId: CHAIN_ID,
-  escrow: ESCROW_ADDRESS,
-  tka: TKA_ADDRESS,
-  tkb: TKB_ADDRESS,
-  deployBlock: DEPLOY_BLOCK,
-} as const;
-
-// TODO(frontend): rellenar los ABIs en el prompt del frontend.
-// export const ESCROW_ABI = [/* ... */] as const;
-// export const ERC20_ABI = [/* ... */] as const;
+# 5: generar web/.env.development.local (idempotente: se regenera entero en cada deploy).
+#    🇪🇸 web/lib/contracts.ts ahora está VERSIONADO y lee las direcciones de env vars NEXT_PUBLIC_*
+#       (con defaults de Anvil). Aquí solo alimentamos esas vars para el flujo local: Next.js carga
+#       .env.development.local en `next dev` con PRIORIDAD sobre .env.local, así que NO tocamos
+#       .env.local (donde vive el PINATA_JWT). En Sepolia/Vercel las vars se configuran en el dashboard.
+echo "==> Generando web/.env.development.local ..."
+mkdir -p web
+cat > web/.env.development.local <<EOF
+# AUTO-GENERADO por deploy.sh — NO editar a mano (se regenera en cada deploy local).
+# 🇪🇸 Direcciones del deploy en Anvil. Lo carga `next dev` (development) con prioridad sobre .env.local.
+NEXT_PUBLIC_ESCROW_ADDRESS=${ESCROW_ADDRESS}
+NEXT_PUBLIC_TKA_ADDRESS=${TKA_ADDRESS}
+NEXT_PUBLIC_TKB_ADDRESS=${TKB_ADDRESS}
+NEXT_PUBLIC_CHAIN_ID=31337
+NEXT_PUBLIC_DEPLOY_BLOCK=${DEPLOY_BLOCK}
 EOF
 
 # 6: generar deployment-info.txt (artefacto local legible).
@@ -144,5 +132,5 @@ echo "==> Despliegue local completado."
 echo "    ESCROW: $ESCROW_ADDRESS"
 echo "    TKA:    $TKA_ADDRESS"
 echo "    TKB:    $TKB_ADDRESS"
-echo "    Direcciones exportadas a web/lib/contracts.ts (CHAIN_ID=31337)."
-echo "    Listo. Arranca el frontend (cuando exista) con: cd web && npm run dev"
+echo "    Direcciones exportadas a web/.env.development.local (CHAIN_ID=31337)."
+echo "    Listo. Arranca el frontend con: cd web && pnpm dev"

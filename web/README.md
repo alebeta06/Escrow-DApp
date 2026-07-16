@@ -36,6 +36,26 @@ Copy `.env.example` to `.env.local` (gitignored) and fill in:
 - **`LOG_WINDOW_SIZE`** — block window size for the paginated log scan. Defaults to `50000`. Local Anvil
   has few blocks so it barely matters; on Sepolia via dRPC keep it around `9000` (free-tier limit).
 
+### Contract addresses
+
+The contract addresses and chain id come from `NEXT_PUBLIC_*` env vars (they are `NEXT_PUBLIC_` because
+the **browser** needs them — reads/writes go straight from the client — unlike `LOGS_RPC_URL`, which is
+server-only). `web/lib/contracts.ts` reads them with **Anvil defaults as fallback**:
+
+- **`NEXT_PUBLIC_ESCROW_ADDRESS`** — Escrow contract address.
+- **`NEXT_PUBLIC_TKA_ADDRESS`** / **`NEXT_PUBLIC_TKB_ADDRESS`** — the two allowlisted test tokens.
+- **`NEXT_PUBLIC_CHAIN_ID`** — expected chain id (`31337` Anvil, `11155111` Sepolia).
+- **`NEXT_PUBLIC_DEPLOY_BLOCK`** — block the Escrow was deployed at; the `/api/timeline` indexer scans
+  from here (never from 0).
+
+**Local:** you do **not** configure these by hand. `./deploy.sh` writes them to `web/.env.development.local`
+(gitignored, auto-generated), which `next dev` loads with priority over `.env.local` — so the
+`anvil → ./deploy.sh → pnpm dev` flow works out of the box (and even without that file, the deterministic
+Anvil defaults in `contracts.ts` already match). `.env.local` (your `PINATA_JWT`) is never touched.
+
+**Sepolia / Vercel:** set these five vars in the Vercel dashboard (Project → Settings → Environment
+Variables). They override the defaults at build time; no code changes needed.
+
 The memo field in **Create Operation** is optional: leaving it empty stores `memoCID = ""` on-chain and
 never calls Pinata, so the escrow flow never depends on IPFS being available. Likewise the **Activity**
 timeline (fed by `/api/timeline`) degrades gracefully if the RPC is unavailable — it never crashes the page.

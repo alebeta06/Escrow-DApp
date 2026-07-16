@@ -45,8 +45,8 @@ async function waitFor(check: () => Promise<boolean>, label: string, timeoutMs: 
 }
 
 function readAddress(source: string, name: string): string {
-  const match = source.match(new RegExp(`${name}\\s*=\\s*"(0x[0-9a-fA-F]{40})"`));
-  if (!match) throw new Error(`No pude leer ${name} de contracts.ts`);
+  const match = source.match(new RegExp(`${name}\\s*=\\s*(0x[0-9a-fA-F]{40})`));
+  if (!match) throw new Error(`No pude leer ${name} de .env.development.local`);
   return match[1];
 }
 
@@ -65,18 +65,19 @@ export default async function globalSetup(): Promise<void> {
   try {
     await waitFor(anvilReady, `Anvil en ${RPC_URL}`, 20_000);
 
-    // 2) Deploy contra ese Anvil (deploy.sh acepta RPC_URL por env; regenera web/lib/contracts.ts).
+    // 2) Deploy contra ese Anvil (deploy.sh acepta RPC_URL por env; escribe web/.env.development.local).
     execFileSync("bash", ["deploy.sh"], {
       cwd: REPO_ROOT,
       env: { ...process.env, RPC_URL },
       stdio: "inherit",
     });
 
-    // 3) Leer direcciones desde el contracts.ts recién regenerado (no hardcodear).
-    const contractsSrc = readFileSync(resolve(WEB_DIR, "lib", "contracts.ts"), "utf8");
-    const escrow = readAddress(contractsSrc, "ESCROW_ADDRESS");
-    const tka = readAddress(contractsSrc, "TKA_ADDRESS");
-    const tkb = readAddress(contractsSrc, "TKB_ADDRESS");
+    // 3) Leer direcciones desde el .env.development.local recién generado (no hardcodear).
+    //    🇪🇸 `next dev` (paso 4) carga este mismo fichero → la app usa estas direcciones.
+    const envSrc = readFileSync(resolve(WEB_DIR, ".env.development.local"), "utf8");
+    const escrow = readAddress(envSrc, "NEXT_PUBLIC_ESCROW_ADDRESS");
+    const tka = readAddress(envSrc, "NEXT_PUBLIC_TKA_ADDRESS");
+    const tkb = readAddress(envSrc, "NEXT_PUBLIC_TKB_ADDRESS");
 
     // 4) Servidor Next dev en :3100 (arrancado DESPUÉS del deploy → sirve contra el estado ya sembrado).
     //    🇪🇸 LOGS_RPC_URL apunta al Anvil del test (:8546); si no, la route /api/timeline defaultea a
