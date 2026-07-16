@@ -29,9 +29,16 @@ Copy `.env.example` to `.env.local` (gitignored) and fill in:
 - **`NEXT_PUBLIC_IPFS_GATEWAY`** — public IPFS gateway used to _read_ memos back (safe to expose).
   Defaults to `https://gateway.pinata.cloud/ipfs/` if unset. For best reliability use your dedicated
   Pinata gateway: `https://<your-subdomain>.mypinata.cloud/ipfs/`.
+- **`LOGS_RPC_URL`** — server-side RPC used by the `GET /api/timeline` event indexer to scan logs.
+  Defaults to `http://localhost:8545`. Not `NEXT_PUBLIC_` on purpose: the indexer runs server-side, so
+  the RPC URL is never exposed to the browser (in M8 this was public because scanning ran client-side).
+  For Sepolia (Fase 2) use `https://sepolia.drpc.org` (no key).
+- **`LOG_WINDOW_SIZE`** — block window size for the paginated log scan. Defaults to `50000`. Local Anvil
+  has few blocks so it barely matters; on Sepolia via dRPC keep it around `9000` (free-tier limit).
 
 The memo field in **Create Operation** is optional: leaving it empty stores `memoCID = ""` on-chain and
-never calls Pinata, so the escrow flow never depends on IPFS being available.
+never calls Pinata, so the escrow flow never depends on IPFS being available. Likewise the **Activity**
+timeline (fed by `/api/timeline`) degrades gracefully if the RPC is unavailable — it never crashes the page.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
