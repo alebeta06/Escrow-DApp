@@ -88,16 +88,16 @@ defensa sobre esa base. El razonamiento completo, con diagramas, está en
 
 ## Stack
 
-| Capa | Tecnología |
-| --- | --- |
-| Contratos | Solidity 0.8.28 · Foundry (Forge/Anvil/Cast) · OpenZeppelin v5.6.1 |
-| Frontend | Next.js 15 (App Router) · TypeScript strict · Tailwind v4 · ethers v6 |
-| Off-chain | API routes de Next.js · Pinata (IPFS) · indexer de eventos propio |
-| Tests | Foundry (100% en los contratos core) · Playwright E2E (`window.ethereum` mockeado) |
+| Capa      | Tecnología                                                                         |
+| --------- | ---------------------------------------------------------------------------------- |
+| Contratos | Solidity 0.8.28 · Foundry (Forge/Anvil/Cast) · OpenZeppelin v5.6.1                 |
+| Frontend  | Next.js 15 (App Router) · TypeScript strict · Tailwind v4 · ethers v6              |
+| Off-chain | API routes de Next.js · Pinata (IPFS) · indexer de eventos propio                  |
+| Tests     | Foundry (100% en los contratos core) · Playwright E2E (`window.ethereum` mockeado) |
 
 ## Prerequisitos
 
-- [Foundry](https://book.getfoundry.rs/getting-started/installation) (`forge`, `anvil`, `cast`).
+- [Foundry](https://book.getfoundry.sh/getting-started/installation) (`forge`, `anvil`, `cast`).
 - [Node.js](https://nodejs.org) 20+ y **pnpm** vía corepack (`corepack enable pnpm`).
 - [MetaMask](https://metamask.io) en el navegador.
 
