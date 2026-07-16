@@ -7,7 +7,7 @@ import { ConnectButton } from "@/components/ConnectButton";
 import { AddToken } from "@/components/AddToken";
 import { CreateOperation } from "@/components/CreateOperation";
 import { OperationsList } from "@/components/OperationsList";
-import { BalanceDebug } from "@/components/BalanceDebug";
+import { Balances } from "@/components/Balances";
 import { Timeline } from "@/components/Timeline";
 
 export default function Home() {
@@ -43,7 +43,7 @@ export default function Home() {
                 {/* Col 2: operaciones con acciones por rol. */}
                 <OperationsList />
                 {/* Col 3: balances. */}
-                <BalanceDebug />
+                <Balances />
               </div>
               {/* Fila full-width: timeline de actividad alimentado por el indexer. */}
               <Timeline />

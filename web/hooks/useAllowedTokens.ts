@@ -13,7 +13,7 @@ export interface AllowedToken {
 
 /**
  * Reads the escrow allowlist and enriches each token with its `symbol` and `decimals`
- * (both read in parallel per token). Used by AddToken, CreateOperation and BalanceDebug.
+ * (both read in parallel per token). Used by AddToken, CreateOperation and Balances.
  */
 export function useAllowedTokens(): ChainRead<AllowedToken[]> {
   return useChainRead<AllowedToken[]>(async (provider) => {

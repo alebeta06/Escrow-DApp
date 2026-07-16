@@ -11,7 +11,7 @@ import {
 
 // 🇪🇸 NOTA: coordinación de refresco entre columnas SIN acoplarlas. Los hooks de lectura incluyen
 //    `nonce` en sus dependencias → refetchan cuando cualquier escritura llama `refresh()`. Ej:
-//    CreateOperation, tras crear, llama refresh() y OperationsList/BalanceDebug se recargan.
+//    CreateOperation, tras crear, llama refresh() y OperationsList/Balances se recargan.
 //    El default es no-op para que los hooks funcionen aunque no haya provider montado.
 
 interface RefreshContextValue {

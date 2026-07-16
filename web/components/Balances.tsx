@@ -4,7 +4,7 @@ import { formatEther, formatUnits } from "ethers";
 import { useBalances } from "@/hooks/useBalances";
 import { shortAddress } from "@/types/operation";
 
-/** Format a wei value to a trimmed decimal string (debug-panel precision). */
+/** Format a wei value to a trimmed decimal string (panel precision). */
 function fmt(value: bigint, decimals: number): string {
   const asString = decimals === 18 ? formatEther(value) : formatUnits(value, decimals);
   const asNumber = Number(asString);
@@ -13,7 +13,8 @@ function fmt(value: bigint, decimals: number): string {
     : asString;
 }
 
-export function BalanceDebug() {
+/** Balances panel: the Escrow contract (highlighted) and the connected wallet. */
+export function Balances() {
   const { data, isLoading, refetch } = useBalances();
   const tokens = data?.tokens ?? [];
   const accounts = data?.accounts ?? [];

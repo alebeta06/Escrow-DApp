@@ -3,6 +3,7 @@
 import { Contract } from "ethers";
 import { ERC20_ABI, ESCROW_ABI } from "@/lib/abis";
 import { ESCROW_ADDRESS } from "@/lib/contracts";
+import { useEthereum } from "@/lib/ethereum";
 import { useChainRead, type ChainRead } from "@/hooks/useChainRead";
 import type { AllowedToken } from "@/hooks/useAllowedTokens";
 
@@ -23,20 +24,17 @@ export interface BalancesData {
   accounts: AccountBalances[];
 }
 
-// 🇪🇸 NOTA: cuentas estándar de Anvil sembradas por `script/Deploy.s.sol` (1000e18 TKA+TKB c/u).
-//    Son deterministas en local (chainId 31337); #0 es además el owner del Escrow.
-const ANVIL_ACCOUNTS: ReadonlyArray<{ label: string; address: string }> = [
-  { label: "Escrow (contract)", address: ESCROW_ADDRESS },
-  { label: "Account #0 (owner)", address: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" },
-  { label: "Account #1", address: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8" },
-  { label: "Account #2", address: "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC" },
-];
-
 /**
- * Reads ETH + each allowlisted token balance for the escrow and the three seeded Anvil accounts.
+ * Reads ETH + each allowlisted token balance for the escrow and the connected wallet.
  * Every account row and every token balance is fetched in parallel.
+ *
+ * 🇪🇸 NOTA: antes mostraba 3 cuentas Anvil hardcodeadas (#0/#1/#2); en redes reales (Sepolia) esas
+ *    direcciones no significan nada. Ahora: el Escrow + la cuenta conectada. El loader captura
+ *    `account`; como cada cambio de cuenta crea un nuevo `BrowserProvider` en `useEthereum`,
+ *    `useChainRead` refetcha por cambio de identidad del `provider` (no hace falta tocar sus deps).
  */
 export function useBalances(): ChainRead<BalancesData> {
+  const { account } = useEthereum();
   return useChainRead<BalancesData>(async (provider) => {
     const escrow = new Contract(ESCROW_ADDRESS, ESCROW_ABI, provider);
     const tokenAddresses = (await escrow.getAllowedTokens()) as string[];
@@ -49,8 +47,14 @@ export function useBalances(): ChainRead<BalancesData> {
       }),
     );
 
+    // 🇪🇸 Escrow siempre (fila destacada, index 0); la wallet conectada solo si hay cuenta.
+    const rows: ReadonlyArray<{ label: string; address: string }> = [
+      { label: "Escrow (contract)", address: ESCROW_ADDRESS },
+      ...(account ? [{ label: "Your wallet", address: account }] : []),
+    ];
+
     const accounts: AccountBalances[] = await Promise.all(
-      ANVIL_ACCOUNTS.map(async ({ label, address }) => {
+      rows.map(async ({ label, address }) => {
         const [eth, tokenBalances] = await Promise.all([
           provider.getBalance(address),
           Promise.all(
