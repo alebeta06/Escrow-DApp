@@ -62,9 +62,24 @@ if not (escrow and tka and tkb):
     sys.stderr.write("ERROR: no se pudieron extraer las 3 direcciones del run-latest.json\n")
     sys.exit(1)
 
+# 🇪🇸 El bloque del deploy vive en RECEIPTS (hex), NO en transactions (ahí es null). Buscamos el
+#    receipt cuya contractAddress es la del Escrow → su blockNumber es el DEPLOY_BLOCK. Desde ahí
+#    escanea el indexer (nunca desde 0: la lección que costó caro en M8).
+deploy_block = None
+for r in data.get("receipts", []):
+    addr = (r.get("contractAddress") or "").lower()
+    if addr == escrow.lower():
+        deploy_block = int(r["blockNumber"], 16)
+        break
+
+if deploy_block is None:
+    sys.stderr.write("ERROR: no se pudo extraer el blockNumber del deploy del Escrow (receipts)\n")
+    sys.exit(1)
+
 print(escrow)
 print(tka)
 print(tkb)
+print(deploy_block)
 PY
 )"
 
@@ -72,6 +87,7 @@ mapfile -t LINES <<< "$ADDRS"
 ESCROW_ADDRESS="${LINES[0]}"
 TKA_ADDRESS="${LINES[1]}"
 TKB_ADDRESS="${LINES[2]}"
+DEPLOY_BLOCK="${LINES[3]}"
 
 # 5: generar web/lib/contracts.ts (idempotente: se regenera entero en cada deploy).
 echo "==> Generando web/lib/contracts.ts ..."
@@ -86,11 +102,15 @@ export const ESCROW_ADDRESS = "${ESCROW_ADDRESS}";
 export const TKA_ADDRESS = "${TKA_ADDRESS}";
 export const TKB_ADDRESS = "${TKB_ADDRESS}";
 
+// 🇪🇸 Bloque del deploy del Escrow: el indexer de eventos escanea DESDE aquí (nunca desde 0).
+export const DEPLOY_BLOCK = ${DEPLOY_BLOCK};
+
 export const CONTRACTS = {
   chainId: CHAIN_ID,
   escrow: ESCROW_ADDRESS,
   tka: TKA_ADDRESS,
   tkb: TKB_ADDRESS,
+  deployBlock: DEPLOY_BLOCK,
 } as const;
 
 // TODO(frontend): rellenar los ABIs en el prompt del frontend.
@@ -111,6 +131,8 @@ Contratos:
   ESCROW: $ESCROW_ADDRESS
   TKA:    $TKA_ADDRESS
   TKB:    $TKB_ADDRESS
+
+Deploy block (Escrow): $DEPLOY_BLOCK
 
 Tokens autorizados en el Escrow: TKA, TKB
 Seed: 1000e18 de cada token a las cuentas Anvil #0, #1, #2
