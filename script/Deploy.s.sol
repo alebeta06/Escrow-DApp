@@ -18,12 +18,16 @@ contract Deploy is Script {
     uint256 internal constant SEED_AMOUNT = 1_000e18;
 
     function run() external {
-        // Cuentas estándar de Anvil #0, #1, #2 que reciben el seed.
-        address[3] memory accounts = [
-            0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
-            0x70997970C51812dc3A010C7d01b50e0d17dc79C8,
-            0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC
-        ];
+        // 🇪🇸 Destinatarios del seed. DEFAULT: las 3 cuentas estándar de Anvil (#0/#1/#2), para que
+        //    el flujo local (anvil → ./deploy.sh → pnpm dev) y los E2E siembren igual SIN configurar
+        //    nada. En redes reales (Sepolia) se sobreescribe con la env var MINT_RECIPIENTS
+        //    (direcciones separadas por comas), p.ej. el owner del keystore + la cuenta "cliente demo".
+        //    `vm.envOr(name, delim, default)` devuelve el default cuando la var no está definida.
+        address[] memory defaultRecipients = new address[](3);
+        defaultRecipients[0] = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
+        defaultRecipients[1] = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
+        defaultRecipients[2] = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC;
+        address[] memory accounts = vm.envOr("MINT_RECIPIENTS", ",", defaultRecipients);
 
         vm.startBroadcast();
 
