@@ -24,3 +24,4 @@ node_modules/
 # 🇪🇸 web/lib/contracts.ts ya NO se ignora: pasó a versionado (lee direcciones de env vars). Ahora
 #    deploy.sh escribe web/.env.development.local, que ya cae bajo el patrón .env.* de arriba.
 deployment-info.txt
+deployment-info-sepolia.txt
