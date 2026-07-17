@@ -32,8 +32,12 @@ if ! curl -s -X POST "$RPC_URL" \
 fi
 
 # 3: desplegar.
+#    🇪🇸 --slow: envía las tx de una en una esperando el receipt de cada una antes de mandar la
+#       siguiente. Elimina POR CONSTRUCCIÓN los huecos de nonce que colgaban el broadcast (tx
+#       encolada + forge esperando un receipt que nunca llega). En Anvil instamine el coste es
+#       despreciable (~11 tx) y a cambio el deploy es determinista.
 echo "==> Desplegando en Anvil local ..."
-forge script script/Deploy.s.sol --rpc-url "$RPC_URL" --private-key "$PRIVATE_KEY" --broadcast
+forge script script/Deploy.s.sol --rpc-url "$RPC_URL" --private-key "$PRIVATE_KEY" --broadcast --slow
 
 # 4: parsear las 3 direcciones desde run-latest.json (más robusto que stdout).
 #    🇪🇸 Hay DOS TestToken con el mismo contractName → se distinguen por el símbolo del
