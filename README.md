@@ -20,6 +20,7 @@ se conocen ni confían entre sí. CodeCrypto Módulo 9.
 - [Prerequisitos](#prerequisitos)
 - [Puesta en marcha local](#puesta-en-marcha-local)
 - [Cómo usarla](#cómo-usarla)
+- [Despliegue en Sepolia](#despliegue-en-sepolia)
 - [Tests](#tests)
 - [Variables de entorno](#variables-de-entorno)
 - [Estructura del repo](#estructura-del-repo)
@@ -121,8 +122,10 @@ con sus claves privadas.
 ```
 
 Este script: despliega `TestToken` TKA y TKB + el `Escrow`, autoriza ambos tokens en el allowlist,
-siembra **1000 de cada token** a las 3 primeras cuentas de Anvil, y genera `web/lib/contracts.ts`
-(direcciones + `DEPLOY_BLOCK`) y `deployment-info.txt`.
+siembra **1000 de cada token** a las 3 primeras cuentas de Anvil, y escribe las direcciones (+
+`DEPLOY_BLOCK`, chainId `31337`) a `web/.env.development.local` y a `deployment-info.txt`. El frontend
+lee esas direcciones vía variables `NEXT_PUBLIC_*` en `web/lib/contracts.ts` (versionado, con defaults
+de Anvil), así que no hay que configurar nada.
 
 **3. Arranca el frontend** (terminal 3):
 
@@ -140,8 +143,9 @@ Abre [http://localhost:3000](http://localhost:3000).
 - Importa una o dos cuentas de test de Anvil (usa las claves privadas que imprimió `anvil`) para
   actuar como creador y contraparte.
 
-> **Nota:** `web/lib/contracts.ts` es un artefacto **generado y gitignored**. Si reinicias Anvil (que
-> resetea la cadena), vuelve a ejecutar `./deploy.sh` para regenerarlo con las direcciones nuevas.
+> **Nota:** `web/.env.development.local` es un artefacto **generado y gitignored** (`web/lib/contracts.ts`
+> sí está versionado). Como las direcciones de Anvil son deterministas, casi nunca cambian; pero si
+> reinicias Anvil, vuelve a ejecutar `./deploy.sh` para reescribir ese fichero.
 
 ## Cómo usarla
 
@@ -157,6 +161,46 @@ on-chain.
 4. **Creador** → en su operación activa ve **Cancel**: recupera el token bloqueado.
 
 La sección **Activity** muestra el timeline de eventos con timestamps (alimentada por el indexer).
+
+## Despliegue en Sepolia
+
+El despliegue a la testnet pública de Ethereum (Sepolia) usa un script **separado** del local,
+[`deploy-sepolia.sh`](deploy-sepolia.sh): a diferencia del Anvil local, gasta gas real y es
+irreversible, así que firma con un **keystore cifrado de Foundry** (`--account`, nunca la clave en
+claro) y verifica los contratos en Etherscan.
+
+**1. Crea un `.env` en la raíz del repo** (gitignored) con estas cinco variables:
+
+```bash
+SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/TU_API_KEY   # RPC de Sepolia (p.ej. Alchemy)
+ETHERSCAN_API_KEY=TU_ETHERSCAN_API_KEY                            # para forge --verify
+DEPLOYER_ACCOUNT=alebeta-admin                                    # alias del keystore de Foundry
+DEPLOYER_ADDRESS=0x...                                            # dirección de ese keystore = OWNER
+CLIENT_ADDRESS=0x...                                              # cuenta "cliente demo" (contraparte)
+```
+
+- **`DEPLOYER_ACCOUNT`** es el alias de un keystore ya importado en Foundry (`cast wallet import`). Esa
+  cuenta será el **owner** del Escrow (`Ownable(msg.sender)`) y firma el despliegue; Foundry pedirá su
+  passphrase de forma interactiva.
+- **`DEPLOYER_ADDRESS`** debe ser la dirección pública de ese keystore (verifícala con
+  `cast wallet address --account <alias>`). Se usa como `--sender` y como primer destinatario del seed.
+- **`DEPLOYER_ADDRESS`** y **`CLIENT_ADDRESS`** reciben **1000 de cada token** (TKA/TKB) para poder
+  ejecutar el swap de la demo. Internamente el script exporta `MINT_RECIPIENTS="$DEPLOYER_ADDRESS,$CLIENT_ADDRESS"`,
+  que `script/Deploy.s.sol` lee vía `vm.envOr` (sin esa variable, en local, siembra a las 3 cuentas de Anvil).
+
+**2. Ejecuta** (desde la raíz, con Foundry y el keystore configurados):
+
+```bash
+./deploy-sepolia.sh
+```
+
+El script hace un health-check de que el RPC es Sepolia (chainId `11155111`), despliega con `--slow`
+(una tx a la vez, sin huecos de nonce) y `--verify` (verificación en Etherscan con los constructor args
+correctos por contrato). Al terminar genera `deployment-info-sepolia.txt` (direcciones, deploy block y
+enlaces a Etherscan) e imprime las cinco variables `NEXT_PUBLIC_*` listas para pegar en Vercel.
+
+> Si la verificación en Etherscan falla por indexado tardío (el **despliegue** sí se completó), el
+> propio script documenta en comentarios cómo reverificar por contrato con `forge verify-contract`.
 
 ## Tests
 
@@ -226,6 +270,7 @@ Escrow-DApp/
 
 ## Ramas
 
-- **`anvil-local`** (esta rama) — desarrollo y demo en local contra Anvil.
-- **`testnet`** — despliegue en Ethereum Sepolia y producción. Saldrá de esta rama y heredará esta
-  documentación. Aún no existe; este README no promete URLs públicas todavía.
+- **`anvil-local`** — desarrollo y demo en local contra Anvil (rama histórica).
+- **`testnet`** (esta rama) — despliegue en Ethereum Sepolia y producción (Vercel). Hereda toda la
+  documentación anterior y añade el flujo de [Despliegue en Sepolia](#despliegue-en-sepolia). Este
+  README todavía no promete URLs públicas (demo en vivo): se añadirán cuando existan.
