@@ -9,6 +9,7 @@ import { CreateOperation } from "@/components/CreateOperation";
 import { OperationsList } from "@/components/OperationsList";
 import { Balances } from "@/components/Balances";
 import { Timeline } from "@/components/Timeline";
+import { SocialLinks } from "@/components/SocialLinks";
 
 export default function Home() {
   const { isConnected } = useEthereum();
@@ -53,8 +54,12 @@ export default function Home() {
         )}
       </main>
 
-      <footer className="border-t border-foreground/10 px-6 py-4 text-xs opacity-60">
-        Escrow DApp — CodeCrypto M9 · {network} (chainId {CHAIN_ID})
+      {/* 🇪🇸 flex-wrap: en móvil los enlaces caen a una segunda línea en vez de comprimir el texto. */}
+      <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-foreground/10 px-6 py-4 text-xs">
+        <span className="opacity-60">
+          Escrow DApp — CodeCrypto M9 · {network} (chainId {CHAIN_ID})
+        </span>
+        <SocialLinks />
       </footer>
     </div>
   );

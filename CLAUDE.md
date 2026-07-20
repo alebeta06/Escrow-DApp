@@ -26,6 +26,13 @@
 - **Cambio de rol** = cambiar la PK del mock + `page.reload()` (auto-reconexión sin popup). **Limitación conocida y aceptada**: no se emite `accountsChanged`, así que ese listener queda sin cubrir (emitirlo daba flakiness; verificado a mano).
 - Determinismo: esperar el estado DOM terminal (op Active/Completed/Cancelled) ANTES de leer on-chain; NUNCA tapar carreras con `sleep`. `web/lib/contracts.ts` lo regenera el deploy del test y sigue gitignored.
 
+## Marca personal (footer)
+Enlaces de Alejandro que se muestran en el footer de la dApp (`web/components/SocialLinks.tsx`).
+Son datos del proyecto: si cambian, se cambian ahí.
+- GitHub: https://github.com/alebeta06
+- X: https://x.com/Ale_Beta
+- LinkedIn: https://www.linkedin.com/in/alebeta/
+
 ## Git / Workflow
 - Conventional Commits en INGLÉS: `type(scope): subject`
 - Commits atómicos por unidad lógica (NO mega-commits)
