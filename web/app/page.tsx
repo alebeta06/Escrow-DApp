@@ -2,7 +2,7 @@
 
 import { useEthereum } from "@/lib/ethereum";
 import { RefreshProvider } from "@/lib/refresh";
-import { CHAIN_ID } from "@/lib/contracts";
+import { CHAIN_ID, networkName } from "@/lib/contracts";
 import { ConnectButton } from "@/components/ConnectButton";
 import { AddToken } from "@/components/AddToken";
 import { CreateOperation } from "@/components/CreateOperation";
@@ -12,6 +12,7 @@ import { Timeline } from "@/components/Timeline";
 
 export default function Home() {
   const { isConnected } = useEthereum();
+  const network = networkName(CHAIN_ID);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -25,8 +26,8 @@ export default function Home() {
           <div className="mx-auto mt-16 max-w-md text-center">
             <h2 className="text-xl font-semibold">Welcome</h2>
             <p className="mt-2 text-sm opacity-70">
-              Connect your wallet to create and settle atomic ERC20 swaps on the local Anvil
-              network.
+              Connect your wallet to create and settle atomic ERC20 swaps on the{" "}
+              {network} network.
             </p>
           </div>
         ) : (
@@ -53,7 +54,7 @@ export default function Home() {
       </main>
 
       <footer className="border-t border-foreground/10 px-6 py-4 text-xs opacity-60">
-        Escrow DApp — CodeCrypto M9 · Local Anvil (chainId {CHAIN_ID})
+        Escrow DApp — CodeCrypto M9 · {network} (chainId {CHAIN_ID})
       </footer>
     </div>
   );

@@ -32,6 +32,19 @@ export const TKB_ADDRESS = envOr(
 // 🇪🇸 Bloque del deploy del Escrow: el indexer de eventos escanea DESDE aquí (nunca desde 0).
 export const DEPLOY_BLOCK = Number(envOr(process.env.NEXT_PUBLIC_DEPLOY_BLOCK, "3"));
 
+// 🇪🇸 NOTA: el nombre de la red se DERIVA del chainId. Antes el footer decía "Local Anvil" fijo, lo
+//    que MENTÍA en cuanto la app apuntaba a Sepolia (misma build, otra red). Añadir una red aquí es
+//    lo único que hace falta para que la UI la nombre bien.
+const NETWORK_NAMES: Record<number, string> = {
+  31337: "Local Anvil",
+  11155111: "Sepolia",
+};
+
+/** Human-readable name for a chain id, falling back to `Chain <id>` for unknown networks. */
+export function networkName(chainId: number): string {
+  return NETWORK_NAMES[chainId] ?? `Chain ${chainId}`;
+}
+
 export const CONTRACTS = {
   chainId: CHAIN_ID,
   escrow: ESCROW_ADDRESS,
