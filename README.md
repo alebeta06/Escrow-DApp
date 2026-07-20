@@ -11,8 +11,42 @@ se conocen ni confían entre sí. CodeCrypto Módulo 9.
 
 ---
 
+## 🔗 Demo en vivo
+
+La DApp está desplegada en producción sobre **Ethereum Sepolia** (contratos verificados en Etherscan)
+y servida en **Vercel**:
+
+**▶ [escrow-d-app-omega.vercel.app](https://escrow-d-app-omega.vercel.app)**
+
+Para **interactuar** (crear, completar o cancelar operaciones) necesitas
+[MetaMask](https://metamask.io/) apuntando a **Sepolia** y una wallet con algo de **Sepolia ETH**
+de un [faucet](https://sepoliafaucet.com/) para pagar el gas. La lectura del estado (operaciones,
+balances, _timeline_ de actividad) funciona **sin conectar wallet**; solo crear/completar/cancelar
+requiere conectar y firmar.
+
+<!-- 🇪🇸 TODO: sustituir la URL placeholder por el enlace real de YouTube cuando el vídeo esté subido. -->
+<div align="center">
+  <a href="https://youtu.be/PENDIENTE">
+    <img src="https://img.shields.io/badge/Ver_Video_en_YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Ver Video en YouTube" />
+  </a>
+</div>
+
+### Contratos verificados (Sepolia)
+
+Red: **Ethereum Sepolia** (chainId `11155111`) · _deploy block_ `11300758`. El enlace `#code` lleva
+directo a la pestaña del contrato verificado en Etherscan (prueba del despliegue verificado):
+
+| Contrato | Dirección | Etherscan |
+|----------|-----------|-----------|
+| **Escrow** | `0x426F0B446139098D1CAc0883474b7B53c40F285A` | [ver código](https://sepolia.etherscan.io/address/0x426F0B446139098D1CAc0883474b7B53c40F285A#code) |
+| **TKA** (Token A) | `0xb6eD2eC6Cb1136a7183166cbd52A9dB0D5E86BDD` | [ver código](https://sepolia.etherscan.io/address/0xb6eD2eC6Cb1136a7183166cbd52A9dB0D5E86BDD#code) |
+| **TKB** (Token B) | `0xEc7A30c09ab46b4a19Ea733C6545FBdE9dBe6154` | [ver código](https://sepolia.etherscan.io/address/0xEc7A30c09ab46b4a19Ea733C6545FBdE9dBe6154#code) |
+
+---
+
 ## Índice
 
+- [Demo en vivo](#-demo-en-vivo)
 - [El problema](#el-problema)
 - [Arquitectura](#arquitectura)
 - [Decisión técnica clave: CEI hecho arquitectura](#decisión-técnica-clave-cei-hecho-arquitectura)
@@ -271,6 +305,6 @@ Escrow-DApp/
 ## Ramas
 
 - **`anvil-local`** — desarrollo y demo en local contra Anvil (rama histórica).
-- **`testnet`** (esta rama) — despliegue en Ethereum Sepolia y producción (Vercel). Hereda toda la
-  documentación anterior y añade el flujo de [Despliegue en Sepolia](#despliegue-en-sepolia). Este
-  README todavía no promete URLs públicas (demo en vivo): se añadirán cuando existan.
+- **`testnet`** (esta rama) — **en producción**: desplegada en Ethereum Sepolia (contratos verificados)
+  y servida en Vercel. Hereda toda la documentación anterior y añade el flujo de
+  [Despliegue en Sepolia](#despliegue-en-sepolia). URLs y contratos en [Demo en vivo](#-demo-en-vivo).
