@@ -94,7 +94,7 @@ Sacándolos a un módulo de solo-tipos, ambos importan de `EscrowTypes` y no ent
 ## Secuencia del swap atómico
 
 Dos transacciones on-chain de dos actores distintos, pero la liquidación del swap ocurre entera dentro
-de `completeOperation`: ambas piernas o ninguna.
+de `completeOperation`: ambas partes cobran o ninguna.
 
 ```mermaid
 sequenceDiagram
@@ -119,7 +119,7 @@ sequenceDiagram
     Escrow->>TKB: safeTransferFrom(Bob, Alice, 150)
     Escrow->>TKA: safeTransfer(Bob, 100)
 
-    Note over Alice,Bob: Las dos piernas liquidan, o revierte todo
+    Note over Alice,Bob: Las dos partes liquidan, o revierte todo
 ```
 
 Si `completeOperation` revierte en cualquier punto (por ejemplo, Bob no aprobó suficiente TKB), toda la
