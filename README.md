@@ -24,9 +24,8 @@ de un [faucet](https://sepoliafaucet.com/) para pagar el gas. La lectura del est
 balances, _timeline_ de actividad) funciona **sin conectar wallet**; solo crear/completar/cancelar
 requiere conectar y firmar.
 
-<!-- 🇪🇸 TODO: sustituir la URL placeholder por el enlace real de YouTube cuando el vídeo esté subido. -->
 <div align="center">
-  <a href="https://youtu.be/PENDIENTE">
+  <a href="https://www.youtube.com/watch?v=A6CcRPFZaFY">
     <img src="https://img.shields.io/badge/Ver_Video_en_YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Ver Video en YouTube" />
   </a>
 </div>
